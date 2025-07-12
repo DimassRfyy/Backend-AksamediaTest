@@ -13,12 +13,10 @@ class DivisionController extends Controller
         try {
             $query = Division::query();
 
-            // Filter berdasarkan nama jika ada
             if ($request->has('name') && !empty($request->name)) {
                 $query->where('name', 'like', '%' . $request->name . '%');
             }
 
-            // Pagination dengan 10 item per halaman
             $divisions = $query->paginate(10);
 
             return response()->json([

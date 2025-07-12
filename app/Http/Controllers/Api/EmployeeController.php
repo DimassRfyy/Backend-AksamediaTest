@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use App\Http\Requests\EmployeeRequest;
+use App\Http\Resources\EmployeeResource;
 
 class EmployeeController extends Controller
 {
@@ -13,19 +15,16 @@ class EmployeeController extends Controller
         try {
             $query = Employee::with('division');
 
-            // Filter by name
             if ($request->has('name') && !empty($request->name)) {
                 $query->where('name', 'like', '%' . $request->name . '%');
             }
 
-            // Filter by division_id
             if ($request->has('division_id') && !empty($request->division_id)) {
                 $query->where('division_id', $request->division_id);
             }
 
             $employees = $query->paginate(10);
 
-            // Jika tidak ada data yang ditemukan, kembalikan response 404
             if ($employees->total() === 0) {
                 return response()->json([
                     'status' => 'error',
@@ -33,20 +32,7 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            $data = [];
-            foreach ($employees->items() as $employee) {
-                $data[] = [
-                    'id' => $employee->id,
-                    'image' => $employee->image,
-                    'name' => $employee->name,
-                    'phone' => $employee->phone,
-                    'division' => [
-                        'id' => $employee->division->id ?? null,
-                        'name' => $employee->division->name ?? null,
-                    ],
-                    'position' => $employee->position,
-                ];
-            }
+            $data = EmployeeResource::collection($employees->items());
 
             return response()->json([
                 'status' => 'success',
@@ -69,6 +55,70 @@ class EmployeeController extends Controller
                 'status' => 'error',
                 'message' => 'Terjadi kesalahan saat mengambil data employees',
                 'data' => null,
+            ], 500);
+        }
+    }
+
+    public function store(EmployeeRequest $request)
+    {
+        $validated = $request->validated();
+
+        try {
+            Employee::create($validated);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Employee berhasil ditambahkan',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menambahkan employee',
+            ], 500);
+        }
+    }
+
+    public function update(EmployeeRequest $request, $id)
+    {
+        $validated = $request->validated();
+
+        try {
+            $employee = Employee::findOrFail($id);
+            $employee->update($validated);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Employee berhasil diupdate',
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Employee tidak ditemukan',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengupdate employee',
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $employee = Employee::findOrFail($id);
+            $employee->delete();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Employee berhasil dihapus',
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Employee tidak ditemukan',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menghapus employee',
             ], 500);
         }
     }
