@@ -6,10 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Admin Authentication Routes
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('admin.guest');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:admin');
 
-Route::get('/divisions', [DivisionController::class, 'index']);
+// Protected Routes - require authentication
+Route::middleware('auth:admin')->group(function () {
+    Route::get('/divisions', [DivisionController::class, 'index']);
+    Route::get('/employees', [\App\Http\Controllers\Api\EmployeeController::class, 'index']);
+});
 
 Route::get('/user', function (Request $request) {
     return $request->user();

@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Database\Seeders\AdminSeeder;
+use Database\Seeders\DivisionSeeder;
+use Database\Seeders\EmployeeSeeder;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -23,6 +25,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             AdminSeeder::class,
+            DivisionSeeder::class,
+            EmployeeSeeder::class,
         ]);
     }
 }
